@@ -1,6 +1,23 @@
 version: '3.8'
 
 services:
+  # 1. Your Application Container
+  app:
+    build: . # or image: your-app-image
+    container_name: app_container
+    restart: always
+    ports:
+      - "8000:8000" # Change to your app's port
+    depends_on:
+      - db # Forces the app to wait until the DB container starts
+    environment:
+      - DB_HOST=db  # <-- CRITICAL: Must match the service name below, NOT localhost
+      - DB_PORT=3306
+      - DB_DATABASE=my_application_db
+      - DB_USERNAME=app_user
+      - DB_PASSWORD=app_password
+
+  # 2. Your MySQL Container
   db:
     image: mysql:8.0
     container_name: mysql_database
@@ -14,8 +31,8 @@ services:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-      # Optional: Put your schema.sql file in a ./init folder to auto-import it on first boot
-      - ./init:/docker-entrypoint-initdb.d 
+      # <-- This mounts your existing SQL file into Docker's auto-init folder
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql 
 
 volumes:
   mysql_data:
